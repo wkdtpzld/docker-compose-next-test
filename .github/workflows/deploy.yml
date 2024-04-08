@@ -35,7 +35,7 @@ jobs:
         env:
           AWS_DEFAULT_REGION: ap-northeast-2
           AWS_REGION: ap-northeast-2
-          ECR_REGISTRY: public.ecr.aws/x9t7d0f7
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: compose-test
           IMAGE_TAG: ${{ github.run_number }}
         run: |
