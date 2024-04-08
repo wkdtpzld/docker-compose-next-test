@@ -1,24 +1,36 @@
-# 기본 이미지로 node의 LTS(장기지원) 버전을 사용
-FROM node:lts-alpine
-
-# 앱 디렉토리 생성
+FROM node:lts-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# 앱 의존성 설치
-# package.json 과 yarn.lock 파일을 /app 디렉토리로 복사
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock* ./
 
 # 의존성 설치
 RUN yarn install --frozen-lockfile
 
-# 앱 소스 추가
+FROM node:lts-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js 앱 빌드
+ENV NEXT_TELEMETRY_DISABLED 1
+
 RUN yarn build
 
-# 앱 실행을 위한 포트
+FROM node:lts-alpine AS runner
+WORKDIR /app
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
 EXPOSE 3000
 
-# Next.js 앱 시작
+ENV PORT 3000
+
 CMD ["yarn", "start"]
