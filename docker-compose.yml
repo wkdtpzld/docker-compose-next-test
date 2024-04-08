@@ -1,10 +1,8 @@
 version: '3'
 services:
-  nextjs:
-    build: .
+  web:
+    image: public.ecr.aws/x9t7d0f7/compose-test/compose-test:1.0.0
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-
+    environment:
+      - NODE_ENV=production
